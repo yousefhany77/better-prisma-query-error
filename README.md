@@ -14,19 +14,39 @@ npm install prisma-better-errors
 
 To use this module, you need to import the `prismaError` class and use it to catch Prisma errors in your code. Here's an example:
 
-```javascript
-import { PrismaClient } from '@prisma/client';
-import { prismaError } from 'prisma-better-errors';
+```ts
+import { PrismaClient,Prisma } from '@prisma/client';
+import {  prismaError } from './prisma';
 
 const prisma = new PrismaClient();
 
-async function getUser(id: number) {
+async function main() {
   try {
-    const user = await prisma.user.findUnique({ where: { id } });
-    return user;
-  } catch (error) {
-    throw new prismaError(error);
+    const user = await prisma.user.create({
+      data: {
+        name: 'Alice',
+        email: 'alice@prisma.io',
+      },
+    });
+    console.log(user);
+  } catch (error:any) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      console.log('HERE');
+      throw new prismaError(error);
+    }
+    throw error
   }
+}
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
 }
 ```
 
@@ -38,9 +58,10 @@ The `prismaError` class extends the built-in `Error` class and adds three proper
 - `statusCode`: the HTTP status code to return in the API response.
 - `metaData` (optional): an object containing additional metadata about the error. This can be useful for debugging purposes.
 
-
 ### With express middleware
+
 Add the `prismaError` class to your error handling middleware and return the `statusCode` and `title` properties as part of the API error response. The `metaData` property can also be returned if it contains any additional information about the error.
+
 ```ts
 app.use((err, req, res, next) => {
   if (err instanceof prismaError) {
@@ -71,7 +92,9 @@ app.use((err, req, res, next) => {
 
 
 ```
+
 ### Custom Error Messages
+
 You can customize the error message and HTTP status code for each Prisma error code by modifying the `QueryError` map in the `prisma-better-errors` module. For example:
 
 ```ts
@@ -84,48 +107,47 @@ QueryError.set('P3000', { message: 'My custom error message', httpStatus: 422 })
 try {
   // Prisma code here
 } catch (error) {
-    // these are the query errors
+  // these are the query errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    throw new prismaError(error)
+    throw new prismaError(error);
   }
 }
 ```
-
 
 ### Error Codes
 
 The following table lists the error codes and their corresponding error messages and HTTP status codes:
 
-| Error Code | Message                                                                   | HTTP Status Code |
-| ---------- | ------------------------------------------------------------------------- | ---------------- |
-| P2000      | The provided value for the column is too long for the column's type       | 400              |
-| P2001      | The record searched for in the where condition does not exist             | 404              |
-| P2002      | Unique constraint failed                                                 | 409              |
-| P2003      | Foreign key constraint failed                                             | 409              |
-| P2004      | A constraint failed on the database                                       | 400              |
-| P2005      | The value stored in the database for the field is invalid for the field's type | 400              |
-| P2006      | The provided value for the field is not valid                             | 400              |
-| P2007      | Data validation error                                                     | 400              |
-| P2008      | Failed to parse the query                                                 | 400              |
-| P2009      | Failed to validate the query                                              | 400              |
-| P2010      | Raw query failed                                                          | 500              |
-| P2011      | Null constraint violation                                                 | 400              |
-| P2012      | Missing a required value                                                  | 400              |
-| P2013      | Missing a required argument                                               | 400              |
-| P2014      | The change you are trying to make would violate the required relation      | 400              |
-| P2015      | A related record could not be found                                        | 404              |
-| P2016      | Query interpretation error                                                | 400              |
-| P2017      | The records for relation between the parent and child models are not connected | 400           |
-| P2018      | The required connected records were not found                              | 404              |
-| P2019      | Input error                                                                | 400              |
-| P2020      | Value out of range for the type                                            | 400              |
-| P2021      | The table does not exist in the current database                           | 404              |
-| P2022      | The column does not exist in the current database                          | 404              |
-| P2023      | Inconsistent column data                                                   | 400              |
-| P2024      | Timed out fetching a new connection from the pool                          | 500              |
-| P2025      | An operation failed because it depends on one or more records that were required but not found | 404 |
-| P2026      | The current database provider doesn't support a feature that the query used | 400           |
-| P2027      | Multiple errors occurred on the database during query execution             | 500              |
+| Error Code | Message                                                                                        | HTTP Status Code |
+| ---------- | ---------------------------------------------------------------------------------------------- | ---------------- |
+| P2000      | The provided value for the column is too long for the column's type                            | 400              |
+| P2001      | The record searched for in the where condition does not exist                                  | 404              |
+| P2002      | Unique constraint failed                                                                       | 409              |
+| P2003      | Foreign key constraint failed                                                                  | 409              |
+| P2004      | A constraint failed on the database                                                            | 400              |
+| P2005      | The value stored in the database for the field is invalid for the field's type                 | 400              |
+| P2006      | The provided value for the field is not valid                                                  | 400              |
+| P2007      | Data validation error                                                                          | 400              |
+| P2008      | Failed to parse the query                                                                      | 400              |
+| P2009      | Failed to validate the query                                                                   | 400              |
+| P2010      | Raw query failed                                                                               | 500              |
+| P2011      | Null constraint violation                                                                      | 400              |
+| P2012      | Missing a required value                                                                       | 400              |
+| P2013      | Missing a required argument                                                                    | 400              |
+| P2014      | The change you are trying to make would violate the required relation                          | 400              |
+| P2015      | A related record could not be found                                                            | 404              |
+| P2016      | Query interpretation error                                                                     | 400              |
+| P2017      | The records for relation between the parent and child models are not connected                 | 400              |
+| P2018      | The required connected records were not found                                                  | 404              |
+| P2019      | Input error                                                                                    | 400              |
+| P2020      | Value out of range for the type                                                                | 400              |
+| P2021      | The table does not exist in the current database                                               | 404              |
+| P2022      | The column does not exist in the current database                                              | 404              |
+| P2023      | Inconsistent column data                                                                       | 400              |
+| P2024      | Timed out fetching a new connection from the pool                                              | 500              |
+| P2025      | An operation failed because it depends on one or more records that were required but not found | 404              |
+| P2026      | The current database provider doesn't support a feature that the query used                    | 400              |
+| P2027      | Multiple errors occurred on the database during query execution                                | 500              |
 
 ## Author
 
