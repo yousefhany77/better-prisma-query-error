@@ -30,7 +30,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: pnpm run build
+          publish: pnpm run release
         env:
           GITHUB_TOKEN: ${{ secrets.PRISMA_BETTER_ERRORS_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
