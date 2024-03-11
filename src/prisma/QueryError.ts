@@ -1,5 +1,3 @@
-import { PrismaClientKnownRequestError } from "./prisma";
-
 export const QueryError = new Map<string, { message: string; httpStatus: number }>([
   ['P2000', { message: "The provided value for the column is too long for the column's type", httpStatus: 400 }],
   ['P2001', { message: 'The record searched for in the where condition does not exist', httpStatus: 404 }],
@@ -45,20 +43,3 @@ export const QueryError = new Map<string, { message: string; httpStatus: number 
   ],
   ['P2027', { message: 'Multiple errors occurred on the database during query execution', httpStatus: 500 }],
 ]);
-
-export function getPrismaErrorMessage(p_error: PrismaClientKnownRequestError): {
-  message: string;
-  httpStatus: number;
-} {
-  const error = QueryError.get(p_error.code);
-  if (!error) {
-    return {
-      message: 'Unknown error',
-      httpStatus: 500,
-    };
-  }
-  return {
-    message: error.message,
-    httpStatus: error.httpStatus,
-  };
-}
