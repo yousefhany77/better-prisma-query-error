@@ -24,13 +24,13 @@ jobs:
         with:
           node-version: 16.x
           cache: "pnpm"
-
+      - run: pnpm config set auto-install-peers true
       - run: pnpm install --frozen-lockfile
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: pnpm run release
+          publish: pnpm run build
         env:
           GITHUB_TOKEN: ${{ secrets.PRISMA_BETTER_ERRORS_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
